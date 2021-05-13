@@ -1,0 +1,28 @@
+# Use the newest version of docker-compose.
+version: '3.8'
+
+# A map of services. One service is one container.
+services:
+
+  # The main container service running the application.
+  app:
+    # Point to the folder where the Dockerfile exists.
+    build: ./backend
+    # The entrypoint for the container to run the application.
+    command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8000
+
+    # Connects the backend folder on the host to the app folder in the container.
+    # This enables the use of the container as a development environment, as the files in the folders are linked.
+    # Any updates made to the project files on the host will be updated live in the container.
+    volumes:
+      - ./backend:/app
+
+    # Exposes a port in the container to a port on the host.
+    # Port 8004 will be bound to port 8000 in the container.
+    ports:
+      - 8004:8000
+
+    # Set environment variables used in the application.
+    environment:
+      - ENVIRONMENT=dev
+      - TESTING=0
