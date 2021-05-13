@@ -11,16 +11,16 @@ RUN apt-get update \
 
 # Build wheels for the python packages in the requirements.txt.
 # This lets us create wheels ready for install for the final image, reducing build time.
-RUN ls -lha
-COPY requirements.txt .
+COPY requirements.txt requirements-dev.txt ./
 RUN pip wheel \
 	--no-cache-dir \
 	--no-deps \
 	--wheel-dir /wheels \
-	-r requirements.txt
+	-r requirements-dev.txt
 
-# Use the alpine version of the Python image for the smallest final image possible.
-FROM python:3.9-alpine
+# Use the slim version of the Python image for the smallest final image possible.
+# Wanted to use Alpine, but struggled to install asyncpg using wheel. When it finally worked, I took forever installing.
+FROM python:3.9-slim
 
 # Stops python from creating __pycache__ file, which is not neccesary files.
 ENV PYTHONDONTWRITEBYTECODE 1

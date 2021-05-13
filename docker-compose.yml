@@ -27,7 +27,9 @@ services:
     # Set environment variables used in the application.
     environment:
       - ENVIRONMENT=dev
-      - TESTING=0
+      - TESTING=False
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/web_dev
+      - DATABASE_TEST_URL=postgres://postgres:postgres@postgres:5432/web_dev
 
     # Add the database container service as a dependency, to make sure that it is running before initiating.
     depends_on:
