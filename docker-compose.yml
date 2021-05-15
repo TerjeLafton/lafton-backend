@@ -29,7 +29,7 @@ services:
       - ENVIRONMENT=dev
       - TESTING=0
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/web_dev
-      - DATABASE_TEST_URL=postgres://postgres:postgres@postgres:5432/web_dev
+      - DATABASE_TEST_URL=postgres://postgres:postgres@postgres:5432/web_test
 
     # Add the database container service as a dependency, to make sure that it is running before initiating.
     depends_on:

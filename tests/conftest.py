@@ -2,7 +2,7 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from tortoise.contrib.fastapi import register_tortoise
+from tortoise.contrib.test import initializer, finalizer
 
 from app.core.config import Settings, get_settings
 from app.main import create_application
@@ -20,17 +20,14 @@ def test_app():
         yield test_client
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_app_with_db():
-    # set up
     app = create_application()
     app.dependency_overrides[get_settings] = get_settings_override
-    register_tortoise(
-        app,
+    initializer(
+        ["app.models.tortoise"],
         db_url=os.environ.get("DATABASE_TEST_URL"),
-        modules={"models": ["app.models.tortoise"]},
-        generate_schemas=True,
-        add_exception_handlers=True,
     )
     with TestClient(app) as test_client:
         yield test_client
+    finalizer()
