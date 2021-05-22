@@ -1,0 +1,43 @@
+# Use full Python image as builder.
+FROM python:3.9 as builder
+
+# Update image and install postgresql.
+RUN apt-get update \
+  && apt-get -y install postgresql \
+  && apt-get clean
+
+# Copy requirements and build wheels.
+COPY requirements.txt ./
+RUN pip wheel \
+	--no-cache-dir \
+	--no-deps \
+	--wheel-dir /wheels \
+	-r requirements.txt
+
+# Use Python-slim for main image to reduce size.
+FROM python:3.9-slim
+
+# Set environemnt variables for Python and the application.
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV ENVIRONMENT prod
+ENV TESTING 0
+
+# Create app directory, group and user.
+RUN mkdir - /app \
+	&& addgroup --system app \
+	&& adduser --system --group app
+
+# Copy wheels from builder image and install them.
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache /wheels/* \
+	&& pip install "uvicorn[standard]==0.13.4"
+
+# Set workdir, copy the rest of the application, set the app user as owner of the folder and change to the app user.
+WORKDIR /app
+COPY . .
+RUN chown -R app:app /app
+USER app
+
+# Run the application with gunicorn.
+CMD gunicorn --bind 0.0.0.0:8000 app.main:app -k uvicorn.workers.UvicornWorker

@@ -1,0 +1,53 @@
+# Use the newest version of .docker-compose.
+version: '3.8'
+
+# A map of services. One service is one container.
+services:
+
+  # The main container service running the application.
+  fastapi:
+    # Point to the folder where the Dockerfile exists.
+    build:
+      context: .
+      dockerfile: .docker/fastapi/Dockerfile
+    # The entrypoint for the container to run the application.
+    command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8000
+
+    # Connects the backend folder on the host to the app folder in the container.
+    # This enables the use of the container as a development environment, as the files in the folders are linked.
+    # Any updates made to the project files on the host will be updated live in the container.
+    volumes:
+      - ./:/app
+
+    # Exposes a port in the container to a port on the host.
+    # Port 8004 will be bound to port 8000 in the container.
+    ports:
+      - 8004:8000
+
+    # Set environment variables used in the application.
+    environment:
+      - ENVIRONMENT=dev
+      - TESTING=0
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/web_dev
+      - DATABASE_TEST_URL=postgres://postgres:postgres@postgres:5432/web_test
+
+    # Add the database container service as a dependency, to make sure that it is running before initiating.
+    depends_on:
+      - postgres
+
+  # The database of the application.
+  postgres:
+    # The point of the Dockerfile used for this container service.
+    build:
+      context: .docker/postgres
+      dockerfile: Dockerfile
+
+    # The host won't need to communicate with the postgres container, so the port is only exposed in the container.
+    # This enables other containers to communicate with it, but nothing outside of Docker is allowed.
+    expose:
+      - 5432
+
+    # Set the username and password of the database as environment variables.
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
